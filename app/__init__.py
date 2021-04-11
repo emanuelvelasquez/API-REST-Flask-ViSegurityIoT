@@ -24,14 +24,10 @@ tunnel = sshtunnel.SSHTunnelForwarder(
     local_bind_address=('127.0.0.1', 10022)
     
 )
-
+ 
 tunnel.start()
 print(tunnel.local_bind_port)
 
-
-file1 = open("PortSSH.txt","w")
-file1.write(str(tunnel.local_bind_port))
-file1.close()
 
 def create_app(config_name):
     if os.getenv('FLASK_CONFIG') == "production":

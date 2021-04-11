@@ -204,7 +204,7 @@ def reconocimineto_stream(camara,fin,id_cam,id_tele):
                         time.sleep(1)
 
                         #guardo las novedades en el text
-                        file1 = open("/home/pi/Documents/FlaskServerWeb-Vi-SegurityIot/text_novedades.txt","a")
+                        file1 = open("/home/pi/Documents/API-REST-Flask-ViSegurityIoT/text_eventos.txt","a")
                         file1.write('{ "evento": "' + id_cam + '" , "hora": "' + hora_actual + '" , "path": "' + pathcarpeta + id_cam + '/' +id_cam + '-' + hora_actual + '.jpg' + '" , "revisado": 0 }')
                         file1.write('\n')
                         file1.close()

@@ -89,7 +89,7 @@ def novedades(fin,app):
         #sched.remove_all_jobs()
 
         #cargon en un listado las novedad de "text_eventos.txt"
-        with open("/home/pi/Documents/FlaskServerWeb-Vi-SegurityIot/text_novedades.txt") as f: 
+        with open("/home/pi/Documents/API-REST-Flask-ViSegurityIoT/text_eventos.txt") as f: 
             lines = f.readlines()
             f.close()
          
@@ -109,7 +109,7 @@ def novedades(fin,app):
     
 
     #codigo para borrar el listado de eventos en la base de datos
-    open('/home/pi/Documents/FlaskServerWeb-Vi-SegurityIot/text_novedades.txt', 'w').close()
+    open('/home/pi/Documents/API-REST-Flask-ViSegurityIoT/text_eventos.txt', 'w').close()
 
     pass
     
