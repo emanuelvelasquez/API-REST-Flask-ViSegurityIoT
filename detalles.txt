@@ -1,0 +1,62 @@
+app = Flask('_name_')
+app.config['MYSQL_HOST'] = '10.42.0.219'
+app.config['MYSQL_USER'] = 'VI-SEGURITYIOT'
+app.config['MYSQL_PASSWORD'] = 'VI-SEGURITYIOT2318'
+app.config['MYSQL_DB'] = 'VI-SEGURITY-db'
+
+pip install virtualenv
+pip install virtualenvwrapper  sudo pip3 install virtualenvwrapper
+export WORKON_HOME=~/Envs
+source /usr/local/bin/virtualenvwrapper.sh
+
+
+mkvirtualenv my-venv
+workon my-venv
+
+export FLASK_APP=run.py
+export FLASK_CONFIG=development
+
+
+pip3 install Flask
+
+dependencias
+click==7.1.2
+Flask==1.1.2
+itsdangerous==1.1.0
+Jinja2==2.11.2
+MarkupSafe==1.1.1
+Werkzeug==1.0.1
+
+
+INICIO
+export FLASK_APP=hello_world.py
+export FLASK_ENV=development
+flask run
+
+
+
+COMANDOS 
+touch run.py config.py
+cd app
+touch __init__.py views.py
+rm hello_world.py
+
+
+pip install SQLAlchemy
+
+
+pip install flask-migrate
+
+
+pip install Flask-WTF
+
+
+pip install email_validator
+pip install flask-bootstrap
+
+
+ "files.associations": {
+        "*.html": "jinja-html"
+      }
+
+pip install Flask_Bootstrap4
