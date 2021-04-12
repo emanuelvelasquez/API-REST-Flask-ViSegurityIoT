@@ -1,8 +1,6 @@
 from flask import render_template, abort, Response, Flask, redirect, url_for, flash, request,current_app
-from flask_login import login_required, current_user
-from . import videostream
+from flask_restful import Resource
 from ..models import Funciones, Eventos, Configuraciones,Usuario, UsuarioNotificacion
-from .forms import FuncionForm
 from .. import db, mail , sched
 from ..common.telegram_send import Send_Telegram, Send_Mensaje
 from ..common.mail import envia_mail_eventos
@@ -13,115 +11,119 @@ import requests, os, json, base64
 from requests.auth import HTTPBasicAuth
 from .TFliteVideoStream import reconocimineto_stream
 
+class VideoStreaming(Resource):
+   
+    def chequeo_admin(self,id_user):
+        if not current_user.is_admin:
+            abort(403)
 
-def chequeo_admin(id_user):
-    if not current_user.is_admin:
-        abort(403)
-
-@videostream.route('/videostream/gen_frame/<string:url_cam>', methods=['GET'])
-def gen_frame(url_cam):
-    
-    cap = CameraStream(url_cam).start()
-    """Video streaming generator function."""
-    while cap:
-        frame = cap.read()
-        convert = cv2.imencode('.jpg', frame)[1].tobytes()
+    #@videostream.route('/videostream/gen_frame/<string:url_cam>', methods=['GET'])
+    def gen_frame(self,url_cam):
         
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + convert + b'\r\n') # concate frame one by one and show result
-
-@videostream.route('/videostream/get_video/<string:id_cam>', methods=['GET'])
-def get_video(id_cam):
-
-    print(id_cam)
-    """Video streaming route. Put this in the src attribute of an img tag."""
-    #reconocimineto_stream
-    #gen_frame
-    url_cam =Configuraciones.query.filter_by(descripcion=id_cam).first().config
-    return Response(gen_frame(url_cam), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-@videostream.route('/videostream/iniciar_fin',methods=['GET'])
-def iniciar_fin():
-    
-    funcion = Funciones.query.get_or_404(1)
-    inicia= request.json["inicia"]
-    if inicia:
-        
-        #cargo array con los idTelegram de los usuarios configurados para Telegram
-        Usuario_Telegram = UsuarioNotificacion.query.filter_by(medionotificacion_id=2)
-        id_tele=[]
-        for i in Usuario_Telegram:
-            usu = Usuario.query.get_or_404(i.usuario_id)
-            if usu.id_telegram is not None and usu.id_telegram != '':
-                i=id_tele.append(usu.id_telegram)
-
-        camaras=Configuraciones.query.filter_by(nombre='cam')
-
-        #creo la tarea de reconocimiento para cada camara
-        for cam in camaras:
+        cap = CameraStream(url_cam).start()
+        """Video streaming generator function."""
+        while cap:
+            frame = cap.read()
+            convert = cv2.imencode('.jpg', frame)[1].tobytes()
             
-            sched.add_job(func=reconocimineto_stream, trigger='cron', args=[cam.config, funcion.fin, cam.descripcion,id_tele], minute=funcion.inicio, id=cam.descripcion)
+            yield (b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + convert + b'\r\n') # concate frame one by one and show result
+
+    #@videostream.route('/videostream/get_video/<string:id_cam>', methods=['GET'])
+    def get(self,id_cam):
+
+        print(id_cam)
+        """Video streaming route. Put this in the src attribute of an img tag."""
+        #reconocimineto_stream
+        #gen_frame
+        url_cam =Configuraciones.query.filter_by(descripcion=id_cam).first().config
+        return Response(gen_frame(url_cam), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+class FuncionReconocimiento(Resource):
+
+    #@videostream.route('/videostream/iniciar_fin',methods=['GET'])
+    def post(self,funcion):
+        
+        funcion = Funciones.query.get_or_404(1)
+        inicia= funcion
+        if inicia:
             
-        #genero la tarea para que una vez finalise la tarea de reconocimiento se guarde los eventos en base de datos
-        sched.add_job(func=novedades, trigger='cron', args=[funcion.fin, current_app._get_current_object()], minute = funcion.fin + 1 , id='eventos')
+            #cargo array con los idTelegram de los usuarios configurados para Telegram
+            Usuario_Telegram = UsuarioNotificacion.query.filter_by(medionotificacion_id=2)
+            id_tele=[]
+            for i in Usuario_Telegram:
+                usu = Usuario.query.get_or_404(i.usuario_id)
+                if usu.id_telegram is not None and usu.id_telegram != '':
+                    i=id_tele.append(usu.id_telegram)
+
+            camaras=Configuraciones.query.filter_by(nombre='cam')
+
+            #creo la tarea de reconocimiento para cada camara
+            for cam in camaras:
+                
+                sched.add_job(func=reconocimineto_stream, trigger='cron', args=[cam.config, funcion.fin, cam.descripcion,id_tele], minute=funcion.inicio, id=cam.descripcion)
+                
+            #genero la tarea para que una vez finalise la tarea de reconocimiento se guarde los eventos en base de datos
+            sched.add_job(func=novedades, trigger='cron', args=[funcion.fin, current_app._get_current_object()], minute = funcion.fin + 1 , id='eventos')
 
 
-        #creo la tarea para guardar la novedades en la base de datos
+            #creo la tarea para guardar la novedades en la base de datos
 
 
-        time.sleep(1)
-        msg = 'True'
+            time.sleep(1)
+            msg = 'True'
 
-    else:
-        # jobss=sched.get_jobs().count()
-        sched.remove_all_jobs()
-        #sched.shutdown()
-        msg = 'False'
+        else:
+            # jobss=sched.get_jobs().count()
+            sched.remove_all_jobs()
+            #sched.shutdown()
+            msg = 'False'
 
-    return Response(msg)
+        return Response(msg)
 
 
-def novedades(fin,app):
+    def novedades(fin,app):
 
-    with app.app_context():
+        with app.app_context():
+            
+            #sched.remove_all_jobs()
+
+            #cargon en un listado las novedad de "text_eventos.txt"
+            with open("/home/pi/Documents/API-REST-Flask-ViSegurityIoT/text_eventos.txt") as f: 
+                lines = f.readlines()
+                f.close()
+            
+            
+            for e in lines:
+                e1 = e.replace(',\n','')
+                e2=e1.replace("'",'"')
+                e3 = json.loads(e2)
+            
+                #cargo la lista de eventos a la base de datos
+                evento=Eventos(evento=e3['evento'],hora=datetime.datetime.strptime(e3['hora'], '%d-%b-%Y-%H:%M:%S'),path=e3['path'],revisado=e3['revisado'])
+                db.session.add(evento)
+            
+            db.session.commit()
+
+            envia_mail_eventos(lines,app)
         
-        #sched.remove_all_jobs()
 
-        #cargon en un listado las novedad de "text_eventos.txt"
-        with open("/home/pi/Documents/API-REST-Flask-ViSegurityIoT/text_eventos.txt") as f: 
-            lines = f.readlines()
-            f.close()
-         
+        #codigo para borrar el listado de eventos en la base de datos
+        open('/home/pi/Documents/API-REST-Flask-ViSegurityIoT/text_eventos.txt', 'w').close()
+
+        pass
         
-        for e in lines:
-            e1 = e.replace(',\n','')
-            e2=e1.replace("'",'"')
-            e3 = json.loads(e2)
-        
-            #cargo la lista de eventos a la base de datos
-            evento=Eventos(evento=e3['evento'],hora=datetime.datetime.strptime(e3['hora'], '%d-%b-%Y-%H:%M:%S'),path=e3['path'],revisado=e3['revisado'])
-            db.session.add(evento)
-        
-        db.session.commit()
 
-        envia_mail_eventos(lines,app)
-    
+    #@videostream.route('/videostream/jpg_get', methods=['POST'])
+class Imagen(Resource):
 
-    #codigo para borrar el listado de eventos en la base de datos
-    open('/home/pi/Documents/API-REST-Flask-ViSegurityIoT/text_eventos.txt', 'w').close()
+    def get(self):
 
-    pass
-    
+            
+        path = json.loads(request.data)
 
-@videostream.route('/videostream/jpg_get', methods=['POST'])
-def jpg_get():
+        img = open(path,"rb")
+        base61jpg = base64.b64encode(img.read())
 
-    
-    path = json.loads(request.data)
-
-    img = open(path,"rb")
-    base61jpg = base64.b64encode(img.read())
-
-    return Response(base61jpg)
+        return Response(base61jpg)
 

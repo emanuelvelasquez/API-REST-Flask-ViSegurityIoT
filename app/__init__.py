@@ -2,10 +2,9 @@ import os
 import time
 import sshtunnel
 from flask import Flask, render_template
-from flask_bootstrap import Bootstrap
-from flask_login import LoginManager
+from flask_restful import Resource, Api, abort, reqparse
 from flask_mail import Mail
-from flask_migrate import Migrate
+#from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -14,8 +13,8 @@ from config import app_config
 
 #inicializa db y login
 db = SQLAlchemy()
-login_manager = LoginManager()
-migrate = Migrate(compare_type=True)
+#login_manager = LoginManager()
+#migrate = Migrate(compare_type=True)
 mail=Mail()
 sched = BackgroundScheduler(daemon=True)
 tunnel = sshtunnel.SSHTunnelForwarder(
@@ -62,20 +61,23 @@ def create_app(config_name):
 
     db.init_app(app)
    
-    login_manager.init_app(app)
-    login_manager.login_message = "Debes Iniciar Sesion!!!"
-    login_manager.login_view = "auth.login"    
+    # login_manager.init_app(app)
+    # login_manager.login_message = "Debes Iniciar Sesion!!!"
+    # login_manager.login_view = "auth.login"    
 
-    migrate = Migrate(app, db)
+    #migrate = Migrate(app, db)
     mail.init_app(app) 
-    Bootstrap(app)
-    
+    #Bootstrap(app)
+    api = Api(app)
+
     sched.start()
     
 
     from app import models
-   
-    from .videostream import videostream as videostream_blueprint
-    app.register_blueprint(videostream_blueprint)
-       
+    #import las clases
+    from  .videostream import views as recurso 
+    api.add_resource(recurso.VideoStreaming,'/videostream/<id_cam>')
+    api.add_resource(recurso.FuncionReconocimiento,'/reconocimiento/<funcion>')
+    api.add_resource(recurso.Imagen,'/imagen')
+
     return app

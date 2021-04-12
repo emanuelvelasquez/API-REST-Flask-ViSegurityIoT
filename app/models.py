@@ -1,12 +1,12 @@
 # app/models.py
 
-from flask_login import UserMixin
+
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
-from app import db, login_manager
+from app import db
 
 
-class Usuario(UserMixin, db.Model):
+class Usuario( db.Model):
     """
     Create an Usuario table
     """
@@ -25,34 +25,15 @@ class Usuario(UserMixin, db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     is_admin = db.Column(db.Boolean, default=False)
 
-    @property
-    def password(self):
-        """
-        Prevent pasword from being accessed
-        """
-        raise AttributeError('password is not a readable attribute.')
-
-    @password.setter
-    def password(self, password):
-        """
-        Set password to a hashed password
-        """
-        self.password_hash = generate_password_hash(password)
-
-    def verify_password(self, password):
-        """
-        Check if hashed password matches actual password
-        """
-        return check_password_hash(self.password_hash, password)
-
+   
     def __repr__(self):
         return '<Usuario: {}>'.format(self.username)
 
 
 # Set up user_loader
-@login_manager.user_loader
-def load_user(user_id):
-    return Usuario.query.get(int(user_id))
+# @login_manager.user_loader
+# def load_user(user_id):
+#     return Usuario.query.get(int(user_id))
 
 
 
