@@ -1,4 +1,4 @@
-from flask import render_template, abort, Response, Flask, redirect, url_for, flash, request,current_app
+from flask import render_template, abort, Response, Flask, redirect, url_for, flash, request,current_app, stream_with_context
 from flask_restful import Resource
 from ..models import Funciones, Eventos, Configuraciones,Usuario, UsuarioNotificacion
 from .. import db, mail , sched
@@ -37,17 +37,19 @@ class VideoStreaming(Resource):
         #reconocimineto_stream
         #gen_frame
         url_cam =Configuraciones.query.filter_by(descripcion=id_cam).first().config
-        return Response(gen_frame(url_cam), mimetype='multipart/x-mixed-replace; boundary=frame')
+        return Response(response=stream_with_context(self.gen_frame(url_cam)), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 class FuncionReconocimiento(Resource):
 
     #@videostream.route('/videostream/iniciar_fin',methods=['GET'])
-    def post(self,funcion):
+
+    def post(self,correr):
         
         funcion = Funciones.query.get_or_404(1)
-        inicia= funcion
-        if inicia:
-            
+        inicia= correr
+        if inicia=='true':
+            sched.remove_all_jobs()
+
             #cargo array con los idTelegram de los usuarios configurados para Telegram
             Usuario_Telegram = UsuarioNotificacion.query.filter_by(medionotificacion_id=2)
             id_tele=[]
@@ -64,7 +66,7 @@ class FuncionReconocimiento(Resource):
                 sched.add_job(func=reconocimineto_stream, trigger='cron', args=[cam.config, funcion.fin, cam.descripcion,id_tele], minute=funcion.inicio, id=cam.descripcion)
                 
             #genero la tarea para que una vez finalise la tarea de reconocimiento se guarde los eventos en base de datos
-            sched.add_job(func=novedades, trigger='cron', args=[funcion.fin, current_app._get_current_object()], minute = funcion.fin + 1 , id='eventos')
+            sched.add_job(func=self.novedades, trigger='cron', args=[funcion.fin, current_app._get_current_object()], minute = funcion.fin + 1 , id='eventos')
 
 
             #creo la tarea para guardar la novedades en la base de datos
@@ -82,7 +84,7 @@ class FuncionReconocimiento(Resource):
         return Response(msg)
 
 
-    def novedades(fin,app):
+    def novedades(self,fin,app):
 
         with app.app_context():
             

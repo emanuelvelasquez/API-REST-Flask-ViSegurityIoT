@@ -1,3 +1,3 @@
 {
-    "python.pythonPath": "apirest-flask/bin/python"
+    "python.pythonPath": "/usr/bin/python3"
 }

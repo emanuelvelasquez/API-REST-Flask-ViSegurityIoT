@@ -71,13 +71,13 @@ def create_app(config_name):
     api = Api(app)
 
     sched.start()
-    
+    sched.remove_all_jobs()
 
     from app import models
     #import las clases
     from  .videostream import views as recurso 
     api.add_resource(recurso.VideoStreaming,'/videostream/<id_cam>')
-    api.add_resource(recurso.FuncionReconocimiento,'/reconocimiento/<funcion>')
+    api.add_resource(recurso.FuncionReconocimiento,'/reconocimiento/<correr>')
     api.add_resource(recurso.Imagen,'/imagen')
 
     return app
