@@ -38,7 +38,7 @@ def create_app(config_name):
             MAIL_PORT = 465,
             MAIL_USERNAME = 'upvisegurityiot@gmail.com',
             MAIL_PASSWORD = 'ebxhtxupclnwxlwa',
-            DONT_REPLY_FROM_EMAIL = '(Vi-Segurity-IoT, upvisegurityiot@gmail.com)',
+            DONT_REPLY_FROM_EMAIL = '(ViSegurityIoT UP, upvisegurityiot@gmail.com)',
             MAIL_USE_SSL= True,
             MAIL_USE_TLS = False
 
@@ -53,7 +53,7 @@ def create_app(config_name):
             MAIL_PORT = 465,
             MAIL_USERNAME = 'upvisegurityiot@gmail.com',
             MAIL_PASSWORD = 'ebxhtxupclnwxlwa',
-            DONT_REPLY_FROM_EMAIL = '(Vi-Segurity-IoT, upvisegurityiot@gmail.com)',
+            DONT_REPLY_FROM_EMAIL = '(ViSegurityIoT UP, upvisegurityiot@gmail.com)',
             MAIL_USE_SSL= True,
             MAIL_USE_TLS = False
 
