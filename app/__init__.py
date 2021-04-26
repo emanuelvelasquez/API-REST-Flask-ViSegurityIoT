@@ -36,9 +36,9 @@ def create_app(config_name):
             SQLALCHEMY_DATABASE_URI=os.getenv('SQLALCHEMY_DATABASE_URI'),
             MAIL_SERVER = 'smtp.gmail.com',
             MAIL_PORT = 465,
-            MAIL_USERNAME = 'visegurityiot@gmail.com',
-            MAIL_PASSWORD = 'jfvdxflqqrxwpwbi',
-            DONT_REPLY_FROM_EMAIL = '(Vi-Segurity-IoT, visegurityiot@gmail.com)',
+            MAIL_USERNAME = 'upvisegurityiot@gmail.com',
+            MAIL_PASSWORD = 'ebxhtxupclnwxlwa',
+            DONT_REPLY_FROM_EMAIL = '(ViSegurityIoT UP, upvisegurityiot@gmail.com)',
             MAIL_USE_SSL= True,
             MAIL_USE_TLS = False
 
@@ -51,9 +51,9 @@ def create_app(config_name):
             SECRET_KEY='p9Bv<3Eid9%$i01',
             MAIL_SERVER = 'smtp.gmail.com',
             MAIL_PORT = 465,
-            MAIL_USERNAME = 'visegurityiot@gmail.com',
-            MAIL_PASSWORD = 'jfvdxflqqrxwpwbi',
-            DONT_REPLY_FROM_EMAIL = '(Vi-Segurity-IoT, visegurityiot@gmail.com)',
+            MAIL_USERNAME = 'upvisegurityiot@gmail.com',
+            MAIL_PASSWORD = 'ebxhtxupclnwxlwa',
+            DONT_REPLY_FROM_EMAIL = '(ViSegurityIoT UP, upvisegurityiot@gmail.com)',
             MAIL_USE_SSL= True,
             MAIL_USE_TLS = False
 
