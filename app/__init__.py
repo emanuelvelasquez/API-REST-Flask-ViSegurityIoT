@@ -76,8 +76,9 @@ def create_app(config_name):
     from app import models
     #import las clases
     from  .videostream import views as recurso 
-    api.add_resource(recurso.VideoStreaming,'/videostream/<id_cam>')
-    api.add_resource(recurso.FuncionReconocimiento,'/reconocimiento/<correr>')
-    api.add_resource(recurso.Imagen,'/imagen')
+    api.add_resource(recurso.VideoStreaming,'/videostream/<string:id_cam>')
+    api.add_resource(recurso.FuncionReconocimiento,'/reconocimiento/<string:correr>')
+    api.add_resource(recurso.FuncionReconocimiento,'/reconocimiento/<int:inicio_hs>/<int:fin_hs>',endpoint='reco')
+    api.add_resource(recurso.Evento,'/evento/<int:id_evento>')
 
     return app

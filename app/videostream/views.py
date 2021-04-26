@@ -1,4 +1,4 @@
-from flask import render_template, abort, Response, Flask, redirect, url_for, flash, request,current_app, stream_with_context
+from flask import render_template, abort, Response, Flask, redirect, url_for, flash, request,current_app, stream_with_context,jsonify
 from flask_restful import Resource
 from ..models import Funciones, Eventos, Configuraciones,Usuario, UsuarioNotificacion
 from .. import db, mail , sched
@@ -13,10 +13,6 @@ from .TFliteVideoStream import reconocimineto_stream
 
 class VideoStreaming(Resource):
    
-    def chequeo_admin(self,id_user):
-        if not current_user.is_admin:
-            abort(403)
-
     #@videostream.route('/videostream/gen_frame/<string:url_cam>', methods=['GET'])
     def gen_frame(self,url_cam):
         
@@ -31,57 +27,72 @@ class VideoStreaming(Resource):
 
     #@videostream.route('/videostream/get_video/<string:id_cam>', methods=['GET'])
     def get(self,id_cam):
-
+            
         print(id_cam)
         """Video streaming route. Put this in the src attribute of an img tag."""
         #reconocimineto_stream
         #gen_frame
         url_cam =Configuraciones.query.filter_by(descripcion=id_cam).first().config
         return Response(response=stream_with_context(self.gen_frame(url_cam)), mimetype='multipart/x-mixed-replace; boundary=frame')
+      
+            
+    
+
 
 class FuncionReconocimiento(Resource):
 
     #@videostream.route('/videostream/iniciar_fin',methods=['GET'])
 
-    def post(self,correr):
-        
+    def post(self,correr=None,inicio_hs=0,fin_hs=0):
         funcion = Funciones.query.get_or_404(1)
-        inicia= correr
-        if inicia=='true':
-            sched.remove_all_jobs()
 
-            #cargo array con los idTelegram de los usuarios configurados para Telegram
-            Usuario_Telegram = UsuarioNotificacion.query.filter_by(medionotificacion_id=2)
-            id_tele=[]
-            for i in Usuario_Telegram:
-                usu = Usuario.query.get_or_404(i.usuario_id)
-                if usu.id_telegram is not None and usu.id_telegram != '':
-                    i=id_tele.append(usu.id_telegram)
+        if correr:
+            
+        
+            inicia= correr
+            if inicia=='true':
+                sched.remove_all_jobs()
+                funcion.corriendo = 1
+                #cargo array con los idTelegram de los usuarios configurados para Telegram
+                Usuario_Telegram = UsuarioNotificacion.query.filter_by(medionotificacion_id=2)
+                id_tele=[]
+                for i in Usuario_Telegram:
+                    usu = Usuario.query.get_or_404(i.usuario_id)
+                    if usu.id_telegram is not None and usu.id_telegram != '':
+                        i=id_tele.append(usu.id_telegram)
 
-            camaras=Configuraciones.query.filter_by(nombre='cam')
+                camaras=Configuraciones.query.filter_by(nombre='cam')
 
-            #creo la tarea de reconocimiento para cada camara
-            for cam in camaras:
-                
-                sched.add_job(func=reconocimineto_stream, trigger='cron', args=[cam.config, funcion.fin, cam.descripcion,id_tele], minute=funcion.inicio, id=cam.descripcion)
-                
-            #genero la tarea para que una vez finalise la tarea de reconocimiento se guarde los eventos en base de datos
-            sched.add_job(func=self.novedades, trigger='cron', args=[funcion.fin, current_app._get_current_object()], minute = funcion.fin + 1 , id='eventos')
-
-
-            #creo la tarea para guardar la novedades en la base de datos
+                #creo la tarea de reconocimiento para cada camara
+                for cam in camaras:
+                    
+                    sched.add_job(func=reconocimineto_stream, trigger='cron', args=[cam.config, funcion.fin, cam.descripcion,id_tele], minute=funcion.inicio, id=cam.descripcion)
+                    
+                #genero la tarea para que una vez finalise la tarea de reconocimiento se guarde los eventos en base de datos
+                sched.add_job(func=self.novedades, trigger='cron', args=[funcion.fin, current_app._get_current_object()], minute = funcion.fin + 1 , id='eventos')
 
 
-            time.sleep(1)
-            msg = 'True'
+                #creo la tarea para guardar la novedades en la base de datos
 
+
+                time.sleep(1)
+                msg = 'Se inicio exitosamente la funcion de Reconocimiento!!!'
+
+            else:
+                funcion.corriendo = 0
+                # jobss=sched.get_jobs().count()
+                sched.remove_all_jobs()
+                #sched.shutdown()
+                msg = 'Se detuvo exitosamente la funcion de Reconocimiento!!!'
+            
         else:
-            # jobss=sched.get_jobs().count()
-            sched.remove_all_jobs()
-            #sched.shutdown()
-            msg = 'False'
+            funcion.inicio = inicio_hs
+            funcion.fin = fin_hs
+            msg = 'Se modifico el periodo exitosamente!!!'
 
-        return Response(msg)
+        db.session.commit()
+
+        return jsonify(msg=msg)
 
 
     def novedades(self,fin,app):
@@ -117,15 +128,15 @@ class FuncionReconocimiento(Resource):
         
 
     #@videostream.route('/videostream/jpg_get', methods=['POST'])
-class Imagen(Resource):
+class Evento(Resource):
 
-    def get(self):
+    def get(self,id_evento):
 
             
-        path = json.loads(request.data)
+        evento = Eventos.query.get_or_404(id_evento)
 
-        img = open(path,"rb")
+        img = open(evento.path,"rb")
         base61jpg = base64.b64encode(img.read())
 
-        return Response(base61jpg)
+        return jsonify(img=base61jpg,dispositivo=evento.evento,hora=evento.hora)
 
