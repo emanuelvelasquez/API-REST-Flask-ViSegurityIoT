@@ -50,7 +50,7 @@ class FuncionReconocimiento(Resource):
             
         
             inicia= correr
-            if inicia=='true':
+            if inicia=='True':
                 sched.remove_all_jobs()
                 funcion.corriendo = 1
                 #cargo array con los idTelegram de los usuarios configurados para Telegram
@@ -131,8 +131,9 @@ class FuncionReconocimiento(Resource):
 class Evento(Resource):
 
     def get(self,id_evento):
-
-            
+        # url=Configuraciones.query.filter_by(nombre='ngrok').first().config
+        # response=requests.post(url + '/reconocimiento/False').text   
+        # asdad= json.loads(response)['msg']
         evento = Eventos.query.get_or_404(id_evento)
 
         img = open(evento.path,"rb")
