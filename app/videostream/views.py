@@ -130,14 +130,12 @@ class FuncionReconocimiento(Resource):
     #@videostream.route('/videostream/jpg_get', methods=['POST'])
 class Evento(Resource):
 
-    def get(self,id_evento):
-        # url=Configuraciones.query.filter_by(nombre='ngrok').first().config
-        # response=requests.post(url + '/reconocimiento/False').text   
-        # asdad= json.loads(response)['msg']
-        evento = Eventos.query.get_or_404(id_evento)
+      def get(self):
+    
+            
+        path = json.loads(request.data)
 
-        img = open(evento.path,"rb")
+        img = open(path,"rb")
         base61jpg = base64.b64encode(img.read())
 
-        return jsonify(img=base61jpg,dispositivo=evento.evento,hora=evento.hora)
-
+        return Response(base61jpg)
